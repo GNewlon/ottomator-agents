@@ -1,55 +1,55 @@
 """
-Simple PDF Parsing with Docling - Quick Start
-==============================================
+Simple PDF Parsing with Docling - Dynamic Input Version
+======================================================
 
-This script demonstrates the most basic usage of Docling:
-converting a PDF to Markdown.
-
-Why Docling?
-- Handles complex PDFs with tables, images, and multi-column layouts
-- No need for custom OCR implementation
-- Preserves document structure and formatting
-- Works out-of-the-box without configuration
-
-Usage:
-    python 01_simple_pdf.py
+Processes ALL supported files found in the input directory.
+No hardcoded filenames.
 """
 
+from pathlib import Path
 from docling.document_converter import DocumentConverter
 
 def main():
-    # Path to PDF document
-    pdf_path = "../documents/technical-architecture-guide.pdf"
+    input_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Input")
+    output_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Output")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 60)
-    print("Converting PDF to Markdown with Docling")
+    print("Dynamic Document Processing with Docling")
     print("=" * 60)
-    print(f"Input: {pdf_path}\n")
+    print(f"Input Directory: {input_dir}\n")
 
-    # Initialize converter
+    if not input_dir.exists():
+        raise FileNotFoundError(f"Input directory not found: {input_dir}")
+
+    files = [f for f in input_dir.iterdir() if f.is_file()]
+
+    if not files:
+        print("No files found in input directory.")
+        return
+
     converter = DocumentConverter()
 
-    # Convert PDF
-    print("Processing PDF...")
-    result = converter.convert(pdf_path)
+    for file_path in files:
+        print(f"\nProcessing: {file_path.name}")
 
-    # Export to Markdown
-    markdown = result.document.export_to_markdown()
+        try:
+            result = converter.convert(str(file_path))
+            markdown = result.document.export_to_markdown()
 
-    # Display results
-    print("\n" + "=" * 60)
-    print("MARKDOWN OUTPUT")
-    print("=" * 60)
-    print(markdown[:1000])  # Show first 1000 characters
-    print("\n... (truncated for display)")
+            output_file = output_dir / f"{file_path.stem}.md"
 
-    # Save to file
-    output_path = "output/output_simple.md"
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(markdown)
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(markdown)
 
-    print(f"\n✓ Full markdown saved to: {output_path}")
-    print(f"✓ Total length: {len(markdown)} characters")
+            print(f"✓ Success → {output_file}")
+            print(f"✓ Length: {len(markdown)} chars")
+
+        except Exception as e:
+            print(f"✗ Failed: {e}")
+
+    print("\nProcessing complete.")
 
 if __name__ == "__main__":
     main()

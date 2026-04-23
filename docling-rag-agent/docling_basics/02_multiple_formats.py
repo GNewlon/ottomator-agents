@@ -1,38 +1,19 @@
 """
 Multi-Format Document Processing with Docling
 ==============================================
-
-This script demonstrates Docling's ability to handle multiple
-document formats with a unified API.
-
-Supported formats:
-- PDF (.pdf)
-- Word (.docx, .doc)
-- PowerPoint (.pptx, .ppt)
-- Excel (.xlsx, .xls)
-- HTML (.html, .htm)
-- Images (.png, .jpg)
-- And more...
-
-Usage:
-    python 02_multiple_formats.py
 """
 
 from docling.document_converter import DocumentConverter
 from pathlib import Path
+import shutil
 
-def process_document(file_path: str, converter: DocumentConverter) -> dict:
-    """Process a single document and return metadata."""
+def process_document(file_path: str, converter: DocumentConverter, output_dir: Path) -> dict:
     try:
         print(f"\n📄 Processing: {Path(file_path).name}")
 
-        # Convert document
         result = converter.convert(file_path)
-
-        # Export to markdown
         markdown = result.document.export_to_markdown()
 
-        # Get document info
         doc_info = {
             'file': Path(file_path).name,
             'format': Path(file_path).suffix,
@@ -41,12 +22,11 @@ def process_document(file_path: str, converter: DocumentConverter) -> dict:
             'preview': markdown[:200].replace('\n', ' ')
         }
 
-        # Save output
-        output_file = f"output/output_{Path(file_path).stem}.md"
+        output_file = output_dir / f"{Path(file_path).stem}.md"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(markdown)
 
-        doc_info['output_file'] = output_file
+        doc_info['output_file'] = str(output_file)
 
         print(f"   ✓ Converted successfully")
         print(f"   ✓ Output: {output_file}")
@@ -67,24 +47,36 @@ def main():
     print("Multi-Format Document Processing with Docling")
     print("=" * 60)
 
-    # List of documents to process
-    documents = [
-        "../documents/technical-architecture-guide.pdf",
-        "../documents/q4-2024-business-review.pdf",
-        "../documents/meeting-notes-2025-01-08.docx",
-        "../documents/company-overview.md",
-    ]
+    input_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Input")
+    output_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Output")
+    processed_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Processed Files")
+    failed_dir = Path(r"C:\Users\GrahamNewlon\OneDrive - newlon.io\Documents\AI Project\Docling\Failed Files")
 
-    # Initialize converter once (reusable)
+    for d in [output_dir, processed_dir, failed_dir]:
+        d.mkdir(parents=True, exist_ok=True)
+
+    if not input_dir.exists():
+        raise FileNotFoundError(f"Input directory not found: {input_dir}")
+
+    documents = [str(f) for f in input_dir.iterdir() if f.is_file()]
+
+    if not documents:
+        print("No files found in input directory.")
+        return
+
     converter = DocumentConverter()
 
-    # Process all documents
     results = []
     for doc_path in documents:
-        result = process_document(doc_path, converter)
+        result = process_document(doc_path, converter, output_dir)
         results.append(result)
 
-    # Summary
+        src = Path(doc_path)
+        if result['status'] == 'Success':
+            shutil.move(str(src), processed_dir / src.name)
+        else:
+            shutil.move(str(src), failed_dir / src.name)
+
     print("\n" + "=" * 60)
     print("CONVERSION SUMMARY")
     print("=" * 60)

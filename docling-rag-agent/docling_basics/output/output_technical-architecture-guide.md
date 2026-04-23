@@ -26,7 +26,7 @@ Explore our developer-friendly HTML to PDF API
 
 Printed using PDFCrowd
 
-HTML to PDF
+[HTML to PDF](https://pdfcrowd.com/html-to-pdf/?ref=pdf)
 
 <!-- image -->
 
